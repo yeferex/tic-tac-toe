@@ -1,0 +1,91 @@
+const board = document.getElementById("board");
+const turnIndicator = document.getElementById("turn-indicator");
+const modal = document.getElementById("winner-modal");
+const modalContent = document.getElementById("modal-content");
+const winnerText = document.getElementById("winner-text");
+
+let currentPlayer = Math.random() < 0.5 ? "X" : "O";
+let gameOver = false;
+
+function updateTurnIndicator() {
+  document.body.style.backgroundColor = currentPlayer === "X" ? "#2196f3" : "#f44336";
+  turnIndicator.textContent = `Turno de: ${currentPlayer}`;
+}
+
+function createBoard() {
+  board.innerHTML = "";
+  gameOver = false;
+  modal.classList.add("hidden");
+
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index = i;
+    cell.addEventListener("click", handleCellClick);
+    board.appendChild(cell);
+  }
+  updateTurnIndicator();
+}
+
+function handleCellClick(e) {
+  if (gameOver) return;
+  const cell = e.target;
+  if (cell.textContent !== "") return;
+
+  cell.classList.add(currentPlayer === "X" ? "x" : "o");
+  cell.classList.add("disabled");
+  cell.style.backgroundColor = currentPlayer === "X" ? "#90caf9" : "#ef9a9a";
+
+  if (checkWinner()) {
+    showWinner(currentPlayer);
+    gameOver = true;
+    return;
+  }
+
+  if (isDraw()) {
+    showWinner("Empate");
+    gameOver = true;
+    return;
+  }
+
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  updateTurnIndicator();
+}
+
+function checkWinner() {
+  const cells = [...document.querySelectorAll(".cell")];
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  return combos.some(([a,b,c]) => {
+    const valA = cells[a].classList.contains("x") ? "X" : cells[a].classList.contains("o") ? "O" : "";
+    const valB = cells[b].classList.contains("x") ? "X" : cells[b].classList.contains("o") ? "O" : "";
+    const valC = cells[c].classList.contains("x") ? "X" : cells[c].classList.contains("o") ? "O" : "";
+    return valA && valA === valB && valB === valC;
+  });
+}
+
+function isDraw() {
+  const cells = [...document.querySelectorAll(".cell")];
+  return cells.every(cell => cell.classList.contains("x") || cell.classList.contains("o"));
+}
+
+function showWinner(winner) {
+  const isEmpate = winner === "Empate";
+  winnerText.textContent = isEmpate ? "¡Empate!" : `¡Gana ${winner}!`;
+  modal.classList.remove("hidden");
+  modalContent.style.backgroundColor = isEmpate
+    ? "#ddd"
+    : winner === "X"
+      ? "#2196f3"
+      : "#f44336";
+}
+
+function restartGame() {
+  currentPlayer = Math.random() < 0.5 ? "X" : "O";
+  createBoard();
+}
+
+createBoard();
